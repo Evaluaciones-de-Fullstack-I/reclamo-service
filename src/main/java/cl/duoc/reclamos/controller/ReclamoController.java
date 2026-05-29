@@ -73,7 +73,7 @@ public class ReclamoController {
                  Usamos .subscribe() para que sea asíncrono y no bloquee el flujo si el otro MS está apagado.
                 */
                 webClientBuilder.build().put()
-                        .uri("http://localhost:8083/api/pedidos/" + actualizado.getPedidoId() + "/reembolsar")
+                        .uri("http://localhost:8084/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId())
                         .retrieve()
                         .bodyToMono(Void.class)
                         .subscribe(
