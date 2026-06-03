@@ -65,23 +65,20 @@ public class ReclamoController {
 
         Reclamo actualizado = reclamoRepository.save(reclamo);
 
-        // SI EL ADMINISTRADOR CONCEDE EL REEMBOLSO, SE NOTIFICA AL MS DE PEDIDOS/VENTAS
+        // 💰 [CONEXIÓN AUTOMÁTICA] SI EL ADMINISTRADOR CONCEDE EL REEMBOLSO, SE NOTIFICA AL MS DE PAGOS
         if (nuevoEstado == EstadoReclamo.REEMBOLSO_AUTORIZADO) {
             try {
-                /* Asumimos que el microservicio de Pedidos corre en el puerto 8083 
-                 y expone un endpoint para cancelar/reembolsar un pedido.
-                 Usamos .subscribe() para que sea asíncrono y no bloquee el flujo si el otro MS está apagado.
-                */
+                // Modificado para apuntar exactamente al puerto 8088 de tu MS Pagos
                 webClientBuilder.build().put()
-                        .uri("http://localhost:8084/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId())
+                        .uri("http://localhost:8088/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId())
                         .retrieve()
                         .bodyToMono(Void.class)
-                        .subscribe(
-                            success -> System.out.println("Notificación de reembolso enviada con éxito al MS Pedidos."),
-                            error -> System.err.println("No se pudo notificar al MS Pedidos (Posiblemente apagado): " + error.getMessage())
-                        );
+                        .block(); // Cambiado a .block() para asegurar la transacción sincrónica
+
+                System.out.println("💰 [CONEXIÓN] Solicitud de reembolso del Pedido ID " + actualizado.getPedidoId() + " procesada exitosamente en MS Pagos.");
+                
             } catch (Exception e) {
-                System.err.println("Error al intentar comunicar con WebClient: " + e.getMessage());
+                System.out.println("❌ [ERROR] No se pudo procesar el reembolso en el MS Pagos: " + e.getMessage());
             }
         }
 
