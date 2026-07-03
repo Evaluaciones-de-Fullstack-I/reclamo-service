@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // 👈 Agregado para leer la URL fija
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,10 @@ public class ReclamoController {
 
     @Autowired
     private WebClient.Builder webClientBuilder;
+
+    // 🛰️ URL del microservicio de Pagos (Configurable desde properties o Railway)
+    @Value("${url.pagos:http://localhost:8088}")
+    private String urlPagos;
 
     @PostMapping
     @Operation(
@@ -95,7 +100,7 @@ public class ReclamoController {
     @PutMapping("/{id}/resolver")
     @Operation(
         summary = "Resolver un reclamo",
-        description = "Permite al administrador cambiar el estado del reclamo y, en caso de autorizar un reembolso, se comunica síncronamente con el MS de Pagos (puerto 8088).",
+        description = "Permite al administrador cambiar el estado del reclamo y, en caso de autorizar un reembolso, se comunica síncronamente con el MS de Pagos.",
         responses = {
             @ApiResponse(
                 responseCode = "200", 
@@ -124,9 +129,9 @@ public class ReclamoController {
 
         if (nuevoEstado == EstadoReclamo.REEMBOLSO_AUTORIZADO) {
             try {
-                // 🛰️ Eureka ahora traduce "pagos-service" de manera dinámica en la nube
+                // 🛰️ Llamada directa usando la variable urlPagos
                 webClientBuilder.build().put()
-                        .uri("http://pagos-service/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId()) // 👈 Cambiado localhost:8088 por pagos-service
+                        .uri(urlPagos + "/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId())
                         .retrieve()
                         .bodyToMono(Void.class)
                         .block();
