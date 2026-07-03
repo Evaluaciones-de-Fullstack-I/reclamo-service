@@ -124,8 +124,9 @@ public class ReclamoController {
 
         if (nuevoEstado == EstadoReclamo.REEMBOLSO_AUTORIZADO) {
             try {
+                // 🛰️ Eureka ahora traduce "pagos-service" de manera dinámica en la nube
                 webClientBuilder.build().put()
-                        .uri("http://localhost:8088/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId())
+                        .uri("http://pagos-service/api/pagos/reembolsar/pedido/" + actualizado.getPedidoId()) // 👈 Cambiado localhost:8088 por pagos-service
                         .retrieve()
                         .bodyToMono(Void.class)
                         .block();
